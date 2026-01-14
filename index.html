@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Kearsipan Perusahaan</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background: #fafafa;
+            color: #111;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            padding: 60px 40px;
+        }
+
+        .hero h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 56px;
+            margin-bottom: 10px;
+        }
+
+        .hero p {
+            color: #555;
+            max-width: 500px;
+        }
+
+        /* SEARCH */
+        .search-wrapper {
+            position: relative;
+            margin: 40px 0;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+        }
+
+        .search-box input {
+            flex: 1;
+            padding: 14px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+        }
+
+        .search-box button {
+            padding: 14px 24px;
+            background: #3b5bfd;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        /* AUTOCOMPLETE */
+        .suggestion-box {
+            position: absolute;
+            top: 60px;
+            width: 100%;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            max-height: 220px;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            z-index: 999;
+            display: none;
+        }
+
+        .suggestion-item {
+            padding: 12px 16px;
+            cursor: pointer;
+        }
+
+        .suggestion-item:hover {
+            background: #f0f2ff;
+        }
+
+        /* CARD */
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 24px;
+        }
+
+        .card {
+            background: white;
+            padding: 24px;
+            border-radius: 14px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        }
+
+        .card a {
+            text-decoration: none;
+            color: #3b5bfd;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <div class="hero">
+        <h1>Arsip Dokumen</h1>
+        <p>Search, explore, and manage company documents in one curated archive system.</p>
+    </div>
+
+    <!-- SEARCH -->
+    <div class="search-wrapper">
+        <form method="POST" class="search-box" autocomplete="off">
+            <input
+                type="text"
+                id="searchInput"
+                name="keyword"
+                placeholder="Search company name..."
+                value="{{ keyword }}"
+            >
+            <button type="submit">Search</button>
+        </form>
+
+        <div id="suggestions" class="suggestion-box"></div>
+    </div>
+
+    {% if hasil %}
+    <div class="cards">
+        {% for nama in hasil %}
+        <div class="card">
+            <h3>{{ nama }}</h3>
+            <a href="{{ url_for('detail', nama=nama) }}">View archive →</a>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+</div>
+
+<script>
+const input = document.getElementById("searchInput");
+const box = document.getElementById("suggestions");
+
+input.addEventListener("input", async () => {
+    const q = input.value.trim();
+
+    if (q.length < 2) {
+        box.style.display = "none";
+        return;
+    }
+
+    const res = await fetch(`/autocomplete?q=${encodeURIComponent(q)}`);
+    const data = await res.json();
+
+    box.innerHTML = "";
+
+    if (data.length === 0) {
+        box.style.display = "none";
+        return;
+    }
+
+    data.forEach(nama => {
+        const div = document.createElement("div");
+        div.className = "suggestion-item";
+        div.textContent = nama;
+        div.onclick = () => {
+            window.location.href = `/perusahaan/${nama}`;
+        };
+        box.appendChild(div);
+    });
+
+    box.style.display = "block";
+});
+
+// hide when click outside
+document.addEventListener("click", e => {
+    if (!e.target.closest(".search-wrapper")) {
+        box.style.display = "none";
+    }
+});
+</script>
+
+</body>
+</html>
